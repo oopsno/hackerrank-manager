@@ -17,12 +17,10 @@ import System.Posix.Temp
 
 type FuncT = [String] -> IO ()
 
--- C
+-- C, but why bother?
 
 createQuiz :: String -> IO ()
-createQuiz name = do
-  let url = "https://www.hackerrank.com/challenges/" ++ name
-  putStrLn url
+createQuiz name = callCommand $ unwords ["env python3 scripts/create.py", name]
 
 -- R
 
