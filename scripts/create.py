@@ -26,12 +26,17 @@ def get(name):
         model = json.loads(res.content.decode())['model']
         html_body = model['body_html']
         pq = pyquery.PyQuery(html_body)
-        si, so = [code.text for code in pq('code')]
+        codes = [code.text for code in pq('code')]
+        if len(codes > 2):
+            si, so = codes[-2:]
+        else:
+            si, so = codes
         track = model['track']
         slugs = [track['track_slug'], track['slug'], model['slug']]
         return si, so, slugs
     except Exception as e:
         print(e)
+        sys.exc_info()[2].print_tb()
         print('Cannot create {}'.format(name))
         exit(-1)
 
