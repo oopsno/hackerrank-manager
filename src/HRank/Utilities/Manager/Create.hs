@@ -3,11 +3,13 @@ module HRank.Utilities.Manager.Create where
 import Control.Lens
 import Control.Exception
 import Control.Monad
+import qualified Control.Monad as M
 import Data.Aeson.Lens
 import qualified Data.Aeson.Types as AT
 import Data.Text ( pack, unpack ) 
 import qualified Data.Text as TX
 import Data.ByteString.Lazy ( ByteString )
+import Data.Either
 import Data.List
 import System.Process
 import Network.Wreq
@@ -73,4 +75,6 @@ writeChallenge :: ((String, FilePath), [(FilePath, String)]) -> IO ()
 writeChallenge (db@(_, root), xs) = updateDB db >> createProcess (shell ("mkdir -p " ++ root)) >> mapM_ (uncurry writeFile) xs
 
 createQuiz :: String -> IO ()
-createQuiz = getChallenge >=> writeChallenge . renderChallenge
+createQuiz slug = isRight <$> lookupDB slug >>= \e -> 
+ if e then putStrLn (slug ++ " already exists")
+      else getChallenge slug >>= writeChallenge . renderChallenge
