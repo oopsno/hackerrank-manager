@@ -20,11 +20,21 @@ library
 
 executable hrmng
   build-depends:       base >= 4.8 && < 4.9,
+                       hxt  >= 9.3,
                        unix >= 2.7,
+                       lens >= 4.13,
+                       wreq >= 0.4,
+                       text >= 1.2,
+                       aeson >= 0.10,
+                       split >= 0.2,
                        hspec >= 2.2,
                        process >= 1.2,
                        filepath >= 1.4,
                        directory >= 1.2,
+                       regex-pcre >= 0.94,
+                       bytestring >= 0.10, 
+                       lens-aeson >= 1.0.0.5,
+                       HandsomeSoup >= 0.4, 
                        haskell-src-exts >= 1.17
   main-is: HRank/Utilities/Manager/Main.hs
   hs-source-dirs:      src

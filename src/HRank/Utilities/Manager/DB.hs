@@ -5,7 +5,7 @@ import System.Directory
 import System.FilePath.Posix
 
 absDBPath :: IO FilePath
-absDBPath = (</> "hrmng/db.hs") <$> getHomeDirectory 
+absDBPath = (</> ".hrmng/db.hs") <$> getHomeDirectory 
 
 readDB :: IO [(String, FilePath)]
 readDB = do
