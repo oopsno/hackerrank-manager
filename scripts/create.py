@@ -26,11 +26,12 @@ def get(name):
         model = json.loads(res.content.decode())['model']
         html_body = model['body_html']
         pq = pyquery.PyQuery(html_body)
-        codes = [code.text for code in pq('code')]
-        if len(codes > 2):
-            si, so = codes[-2:]
-        else:
-            si, so = codes
+        si, so = None, None
+        for strong in pq('strong'):
+            if strong.text == 'Sample Input':
+                si = strong.getparent().getnext().getchildren()[0].text
+            if strong.text == 'Sample Output':
+                so = strong.getparent().getnext().getchildren()[0].text
         track = model['track']
         slugs = [track['track_slug'], track['slug'], model['slug']]
         return si, so, slugs
@@ -42,8 +43,8 @@ def get(name):
 
 
 def render_utest(module_name, si, so):
-    usi = "\"{}\"".format(repr(si)[1:-1])
-    uso = "\"{}\"".format(repr(so)[1:-1])
+    usi = "\"{}\"".format(repr(si)[1:-1]) if si else "\"\""
+    uso = "\"{}\"".format(repr(so)[1:-1]) if so else "\"\""
     return """module {}.UnitTest where
 
 import Test.Hspec
