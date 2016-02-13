@@ -26,6 +26,8 @@ executable hrmng
                        filepath >= 1.4,
                        directory >= 1.2,
                        haskell-src-exts >= 1.17
-  main-is: HRank/Utilities/Manager.hs
+  main-is: HRank/Utilities/Manager/Main.hs
   hs-source-dirs:      src
   default-language:    Haskell2010
+  ghc-options:
+    -dynamic
