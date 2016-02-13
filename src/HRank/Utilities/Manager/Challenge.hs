@@ -26,13 +26,13 @@ filePath :: ModuleType -> Challenge -> FilePath
 filePath t c = foldl1 (</>) ("src/HRank" : track c ++ [titleSlug c, show t]) <.> "hs"
 
 moduleName :: ModuleType -> Challenge -> String
-moduleName t c = intercalate "." $ track c ++ [titleSlug c, show t]
+moduleName t c = intercalate "." $ "HRank" : track c ++ [titleSlug c, show t]
 
 moduleDecl :: ModuleType -> Challenge -> String
 moduleDecl t c = unwords [ "module", moduleName t c, "where" ]
 
 moduleImpl :: ModuleType -> Challenge -> String
-moduleImpl t c = unwords [ "import", "qualified", moduleName t c, "as", show t ]
+moduleImpl t c = unwords [ "import", "qualified", moduleName t c ]
 
 moduleImplQ :: ModuleType -> Challenge -> String -> String
 moduleImplQ t c alias = unwords [ moduleImpl t c, "as", alias ]
@@ -56,10 +56,10 @@ unittestRender c = unlines
   , moduleImplQ Solution c "S"
   , ""
   , "sampleInput :: String"
-  , "sampleInput = \"" ++ fromMaybe "" (sampleInput c) ++ "\""
+  , "sampleInput = " ++ show (fromMaybe "" (sampleInput c))
   , ""
   , "sampleOutput :: String"
-  , "sampleOutput = \"" ++ fromMaybe "" (sampleOutput c) ++ "\""
+  , "sampleOutput = " ++ show (fromMaybe "" (sampleOutput c))
   , ""
   , "main :: IO ()"
   , "main = putStrLn \"No available test cases\"" ]
