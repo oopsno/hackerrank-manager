@@ -4,6 +4,7 @@ import Control.Exception
 import System.Directory
 import System.FilePath.Posix
 import System.IO
+import System.IO.Error
 
 withExsit :: (FilePath -> IO Bool) -> (FilePath -> IO a) -> (FilePath -> IO a) -> FilePath -> IO a
 withExsit p m e path = p path >>= \exists -> if exists then m path else e path
@@ -14,10 +15,9 @@ withFileExsit = withExsit doesFileExist
 withDirExsit :: (FilePath -> IO a) -> (FilePath -> IO a) -> FilePath -> IO a
 withDirExsit = withExsit doesDirectoryExist
 
-catchIOError :: String -> IO a -> IO a -> IO a
-catchIOError prefix action hock = catch action (\e ->
-  hPutStrLn stderr (prefix ++ ": IOError occurred: " ++ show (e :: IOError)) >> hock)
+wrapIOError :: String -> IO a -> IO a
+wrapIOError prefix = modifyIOError (userError . flip (++) (prefix ++ ": IOError occurred: ") . show)
 
-catchIOError_ :: String -> IO () -> IO ()
-catchIOError_ p a = catchIOError p a (return ())
+withDefault :: a -> IO a -> IO a
+withDefault value action = catchIOError action (\e -> return value)
 

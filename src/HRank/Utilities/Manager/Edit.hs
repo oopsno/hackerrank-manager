@@ -14,10 +14,11 @@ editSource :: FilePath -> IO ()
 editSource path = do
   editor <- getEditor
   let message = "[Manager][Edit][editSource]"
-  catchIOError_ message (callProcess editor [path])
+  wrapIOError message (callProcess editor [path])
 
 editSolution :: FilePath -> IO ()
 editSolution = editSource . (</> "Solution.hs")
 
 editUnitTest :: FilePath -> IO ()
 editUnitTest = editSource . (</> "UnitTest.hs")
+

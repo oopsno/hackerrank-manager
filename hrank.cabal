@@ -35,6 +35,7 @@ executable hrmng
                        regex-pcre >= 0.94,
                        bytestring >= 0.10, 
                        lens-aeson >= 1.0.0.5,
+                       pretty-show >= 1.6, 
                        HandsomeSoup >= 0.4, 
                        haskell-src-exts >= 1.17
   main-is: HRank/Utilities/Manager/Main.hs
