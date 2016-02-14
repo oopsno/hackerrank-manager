@@ -33,11 +33,20 @@ breadcrumb c = intercalate " / " $ titlizeTrack c ++ [name c]
 rootDir :: Challenge -> FilePath
 rootDir c = foldl1 (</>) ("src/HRank" : titlizeTrack c ++ [titlizeChallenge c])
 
-filePath :: ModuleType -> Challenge -> FilePath
-filePath t c = foldl1 (</>) ("src/HRank" : titlizeTrack c ++ [titlizeChallenge c, show t]) <.> "hs"
+modulePath :: ModuleType -> Challenge -> FilePath
+modulePath t c = rootDir </> show t <.> "hs"
+
+wrapperPath :: Challenge -> FilePath
+wrapperPath c = rootDir c <.> "hs"
+
+wrapperName :: Challenge -> String
+wrapperName c = intercalate "." $ "HRank" : titlizeTrack c
 
 moduleName :: ModuleType -> Challenge -> String
-moduleName t c = intercalate "." $ "HRank" : titlizeTrack c ++ [titlizeChallenge c, show t]
+moduleName t c = wrapperName c <.> titlizeChallenge c
+
+wrapperDecl :: Challenge -> String
+wrapperDecl c = unwords [ "module", wrapperName c, "where" ]
 
 moduleDecl :: ModuleType -> Challenge -> String
 moduleDecl t c = unwords [ "module", moduleName t c, "where" ]
@@ -99,12 +108,32 @@ unittestRender c = unlines
   , "main :: IO ()"
   , "main = putStrLn \"No available test cases\"" ]
 
+wrapperRender :: Challenge -> String
+wrapperRender c = unlines 
+  [ "{-|"
+  , "Module: " ++ wrapperName c 
+  , "Description : Wrapper for Challenge [" ++ breadcrumb c ++ "]"
+  , "License     : CC BY-NC-SA 3.0"
+  , "Stability   : experimental"
+  , "Portability : POSIX"
+  , ""
+  , "Just inports Solution and its UnitTest"
+  , "-}"
+  , ""
+  , wrapperDecl c
+  , ""
+  , moduleImplQ c Solution "S"
+  , moduleImplQ c UnitTest "U"
+  , ""
+  , "main :: IO ()"
+  , "main = S.main" ]
+
 codeRender :: ModuleType -> Challenge -> String
 codeRender UnitTest = unittestRender 
 codeRender Solution = solutionRender
 
 render :: ModuleType -> Challenge -> (FilePath, String)
-render = curry $ (,) <$> uncurry filePath <*> uncurry codeRender
+render = curry $ (,) <$> uncurry modulePath <*> uncurry codeRender
 
 renderChallenge :: Challenge -> ((String, FilePath), [(FilePath, String)])
 renderChallenge c = ((slug c, rootDir c), map (`render` c) [Solution ..])
