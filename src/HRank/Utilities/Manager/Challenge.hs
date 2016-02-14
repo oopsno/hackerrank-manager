@@ -2,12 +2,15 @@ module HRank.Utilities.Manager.Challenge where
 
 import Control.Applicative
 import Control.Exception
+import Control.Monad
 import Data.Char
 import Data.Maybe
 import Data.List
 import Data.List.Split
 import System.FilePath.Posix
 import Text.Pandoc
+
+import HRank.Utilities.Manager.Haskell
 
 data Challenge = Challenge { name         :: String
                            , slug         :: String
@@ -34,7 +37,7 @@ rootDir :: Challenge -> FilePath
 rootDir c = foldl1 (</>) ("src/HRank" : titlizeTrack c ++ [titlizeChallenge c])
 
 modulePath :: ModuleType -> Challenge -> FilePath
-modulePath t c = rootDir </> show t <.> "hs"
+modulePath t c = rootDir c </> show t <.> "hs"
 
 wrapperPath :: Challenge -> FilePath
 wrapperPath c = rootDir c <.> "hs"
@@ -122,8 +125,8 @@ wrapperRender c = unlines
   , ""
   , wrapperDecl c
   , ""
-  , moduleImplQ c Solution "S"
-  , moduleImplQ c UnitTest "U"
+  , moduleImplQ Solution c "S"
+  , moduleImplQ UnitTest c "U"
   , ""
   , "main :: IO ()"
   , "main = S.main" ]
@@ -135,5 +138,20 @@ codeRender Solution = solutionRender
 render :: ModuleType -> Challenge -> (FilePath, String)
 render = curry $ (,) <$> uncurry modulePath <*> uncurry codeRender
 
+preoperation :: Challenge -> IO ()
+preoperation c = do
+  let xs = "HRank" : titlizeTrack c ++ [titlizeChallenge c]
+  forM_ [1..length xs -1] $ \n -> do
+    let categoryCrumb = take n xs
+        moduleCrumb   = take (n + 1) xs
+        categoryName  = foldl1 (<.>) categoryCrumb
+        categoryPath  = "src" </> foldl1 (</>) categoryCrumb <.> "hs"
+        importModule  = foldl1 (<.>) moduleCrumb
+    makeCategory categoryName [importModule] categoryPath
+
+postoperation :: Challenge -> IO ()
+postoperation c = writeFile (wrapperPath c) (wrapperRender c)
+       
 renderChallenge :: Challenge -> ((String, FilePath), [(FilePath, String)])
 renderChallenge c = ((slug c, rootDir c), map (`render` c) [Solution ..])
+

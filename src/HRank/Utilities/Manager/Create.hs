@@ -87,6 +87,9 @@ createQuiz slug = do
     then putStrLn $ slug ++ "already exists in LoaclDB"
     else do
       putStrLn $ "[Manager][DB][createQuiz]Creating challenge: " ++ slug
-      getChallenge slug >>= writeChallenge . renderChallenge
+      c <- getChallenge slug
+      preoperation c
+      writeChallenge $ renderChallenge c
+      postoperation c
       putStrLn $ "[Manager][DB][createQuiz]Created challenge: " ++ slug
 
