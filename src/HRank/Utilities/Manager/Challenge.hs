@@ -16,17 +16,26 @@ data Challenge = Challenge { name         :: String
 
 data ModuleType = Solution | UnitTest deriving (Enum, Eq, Show)
 
-titleSlug :: Challenge -> String
-titleSlug c = unwords $ map (\(x:xs) -> toUpper x:xs) $ splitOn "-" (slug c)
+titlizeSlug :: String -> String
+titlizeSlug = concatMap (\(x:xs) -> toUpper x:xs) . splitOn "-" 
+
+titlizeChallenge :: Challenge -> String
+titlizeChallenge = titlizeSlug . slug
+
+titlizeTrack :: Challenge -> [String]
+titlizeTrack = map titlizeSlug . track
+
+breadcrumb :: Challenge -> String
+breadcrumb c = intercalate " / " $ titlizeTrack c ++ [name c]
 
 rootDir :: Challenge -> FilePath
-rootDir c = foldl1 (</>) ("src/HRank" : track c ++ [titleSlug c])
+rootDir c = foldl1 (</>) ("src/HRank" : titlizeTrack c ++ [titlizeChallenge c])
 
 filePath :: ModuleType -> Challenge -> FilePath
-filePath t c = foldl1 (</>) ("src/HRank" : track c ++ [titleSlug c, show t]) <.> "hs"
+filePath t c = foldl1 (</>) ("src/HRank" : titlizeTrack c ++ [titlizeChallenge c, show t]) <.> "hs"
 
 moduleName :: ModuleType -> Challenge -> String
-moduleName t c = intercalate "." $ "HRank" : track c ++ [titleSlug c, show t]
+moduleName t c = intercalate "." $ "HRank" : titlizeTrack c ++ [titlizeChallenge c, show t]
 
 moduleDecl :: ModuleType -> Challenge -> String
 moduleDecl t c = unwords [ "module", moduleName t c, "where" ]
@@ -43,6 +52,8 @@ solutionRender c = unlines
   , "import Control.Monad"
   , "import Control.Applicative"
   , ""
+  , "-- Solution for Challenge: " ++ breadcrumb c
+  , ""
   , "main :: IO ()"
   , "main = putStrLn \"No available implementation\"" ]
 
@@ -52,6 +63,8 @@ unittestRender c = unlines
   , ""
   , "import Test.Hspec"
   , "import Test.QuickCheck"
+  , ""
+  , "-- UnitTest for Challenge: " ++ breadcrumb c
   , ""
   , moduleImplQ Solution c "S"
   , ""

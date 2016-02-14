@@ -34,7 +34,7 @@ parseChallenge content = do
     let html = fetchField content "body_html"
         slug = fetchField content "slug"
         name = fetchField content "name"
-        track = [ fetchField2 content ["track", "track_name"], fetchField2 content ["track", "name"] ]
+        track = [ fetchField2 content ["track", "track_slug"], fetchField2 content ["track", "slug"] ]
     let doc = parseHtml html
     quizzes <- runX (doc >>> css "p" //> hasText (not . null) >>> getText)
     let sim = html =~ siRE :: [[String]]
