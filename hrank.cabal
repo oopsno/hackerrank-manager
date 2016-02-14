@@ -26,6 +26,7 @@ executable hrmng
                        wreq >= 0.4,
                        text >= 1.2,
                        aeson >= 0.10,
+                       fuzzy >= 0.1,
                        split >= 0.2,
                        hspec >= 2.2,
                        strict >= 0.3 ,

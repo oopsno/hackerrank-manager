@@ -11,6 +11,7 @@ import qualified Data.Text as TX
 import Data.ByteString.Lazy ( ByteString )
 import Data.Either
 import Data.List
+import Data.Maybe
 import System.Process
 import Network.Wreq
 import Text.HandsomeSoup
@@ -21,6 +22,7 @@ import System.IO.Error
 
 import HRank.Utilities.Manager.Challenge
 import HRank.Utilities.Manager.DB
+import HRank.Utilities.Manager.IOError
 
 type ResponseT = Response ByteString
 
@@ -72,9 +74,19 @@ getChallenge :: String -> IO Challenge
 getChallenge = parseChallenge <=< getContent . buildURL
 
 writeChallenge :: ((String, FilePath), [(FilePath, String)]) -> IO ()
-writeChallenge (db@(_, root), xs) = updateDB db >> createProcess (shell ("mkdir -p " ++ root)) >> mapM_ (uncurry writeFile) xs
+writeChallenge (db@(_, root), xs) = do
+  wrapper "[updateDB]"  $ updateDB db
+  wrapper "[mkdir]"     $ createProcess (shell ("mkdir -p " ++ root))
+  wrapper "[writeFile]" $ mapM_ (uncurry writeFile) xs
+  where wrapper = wrapIOError . (++) "[Manager][Create][writeChallenge]"
 
 createQuiz :: String -> IO ()
-createQuiz slug = isRight <$> lookupDB slug >>= \e -> 
- if e then putStrLn (slug ++ " already exists")
-      else getChallenge slug >>= writeChallenge . renderChallenge
+createQuiz slug = do
+  exsits <- exsitsInDB slug
+  if exsits
+    then putStrLn $ slug ++ "already exists in LoaclDB"
+    else do
+      putStrLn $ "[Manager][DB][createQuiz]Creating challenge: " ++ slug
+      getChallenge slug >>= writeChallenge . renderChallenge
+      putStrLn $ "[Manager][DB][createQuiz]Created challenge: " ++ slug
+
