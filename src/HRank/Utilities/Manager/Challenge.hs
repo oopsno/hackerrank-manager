@@ -1,11 +1,13 @@
 module HRank.Utilities.Manager.Challenge where
 
 import Control.Applicative
+import Control.Exception
 import Data.Char
 import Data.Maybe
 import Data.List
 import Data.List.Split
 import System.FilePath.Posix
+import Text.Pandoc
 
 data Challenge = Challenge { name         :: String
                            , slug         :: String
@@ -46,27 +48,47 @@ moduleImpl t c = unwords [ "import", "qualified", moduleName t c ]
 moduleImplQ :: ModuleType -> Challenge -> String -> String
 moduleImplQ t c alias = unwords [ moduleImpl t c, "as", alias ]
 
+renderDescription :: Challenge -> String
+renderDescription c = case readHtml def . fromMaybe "" . description $ c of
+  Right doc -> writeHaddock def doc
+  Left  err -> "-- No printable description"
+
 solutionRender :: Challenge -> String
 solutionRender c = unlines 
-  [ moduleDecl Solution c
+  [ "{-| "
+  , "Module: " ++ moduleName Solution c
+  , "Description : Solution for Challenge [" ++ breadcrumb c ++ "]"
+  , "License     : CC BY-NC-SA 3.0"
+  , "Stability   : experimental"
+  , "Portability : POSIX"
+  , ""
+  , renderDescription c
+  , "-}"
+  , ""
+  , moduleDecl Solution c
+  , ""
   , "import Control.Monad"
   , "import Control.Applicative"
-  , ""
-  , "-- Solution for Challenge: " ++ breadcrumb c
   , ""
   , "main :: IO ()"
   , "main = putStrLn \"No available implementation\"" ]
 
 unittestRender :: Challenge -> String
 unittestRender c = unlines
-  [ moduleDecl UnitTest c
+  [ "{-| "
+  , "Module: " ++ moduleName UnitTest c
+  , "Description : UnitTest for Challenge [" ++ breadcrumb c ++ "]"
+  , "License     : CC BY-NC-SA 3.0"
+  , "Stability   : experimental"
+  , "Portability : POSIX"
+  , ""
+  , "Provides offical sample in(out)put, and basic unit test framework of challenge" ++ name c
+  , "-}"
+  , ""
+  , moduleDecl UnitTest c
   , ""
   , "import Test.Hspec"
   , "import Test.QuickCheck"
-  , ""
-  , "-- UnitTest for Challenge: " ++ breadcrumb c
-  , ""
-  , moduleImplQ Solution c "S"
   , ""
   , "sampleInput :: String"
   , "sampleInput = " ++ show (fromMaybe "" (sampleInput c))
