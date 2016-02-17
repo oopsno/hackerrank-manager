@@ -13,13 +13,13 @@ import System.IO.Error
 
 import qualified System.IO.Error.Lens as IOELens
 
-
-import qualified HRank.Utilities.Manager.Create  as C
-import qualified HRank.Utilities.Manager.Read    as R
-import qualified HRank.Utilities.Manager.Test    as T
-import qualified HRank.Utilities.Manager.Execute as X
-import qualified HRank.Utilities.Manager.Edit    as E
-import qualified HRank.Utilities.Manager.DB      as DB
+import qualified HRank.Utilities.Manager.Challenge  as D
+import qualified HRank.Utilities.Manager.Create     as C
+import qualified HRank.Utilities.Manager.Read       as R
+import qualified HRank.Utilities.Manager.Test       as T
+import qualified HRank.Utilities.Manager.Execute    as X
+import qualified HRank.Utilities.Manager.Edit       as E
+import qualified HRank.Utilities.Manager.DB         as DB
 
 type Action = String -> IO ()
 
@@ -47,9 +47,16 @@ listChallenges = Function
   , alias       = "l"
   , description = [ "List all registered challenges" ]
   , action      = const $ DB.listChallenges >>= (\xs ->
-                    forM_ xs (\(n, p) -> do
-                      putStrLn $ "  Challenge: " ++ n
-                      putStrLn $ "  Location:  " ++ p)) }
+                    forM_ xs (\(n, (p, c)) -> do
+                      putStrLn $ "  Challenge:   " ++ D.name c
+                      putStrLn $ "  Slug:        " ++ D.slug c
+                      putStrLn $ "  Location:    " ++ p
+                      putStrLn $ description c)) }
+  where pre = "  Description: "
+        indent = (++) $ replicate (length pre) ' '
+        description c = case lines $ D.asciiDescription c of
+          (x:xs) -> unlines $ (pre ++ x) : map indent xs
+          []     -> pre ++ "Unavailable"
 
 create :: Function
 create = Function

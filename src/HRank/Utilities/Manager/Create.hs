@@ -37,11 +37,11 @@ getChallenge = parseChallenge <=< getContent . buildURL
 
 writeChallenge :: Challenge -> IO ()
 writeChallenge c = do
-  let (db@(_, root), xs) = renderChallenge c
+  let ((name, root), xs) = renderChallenge c
   wrapper "[BuildCategory]" $ preoperation c
   wrapper "[MakeDirectory]" $ createDirectoryIfMissing True root
   wrapper "[WriteFile]"     $ mapM_ (uncurry writeFile) xs
-  wrapper "[UpdateDB]"      $ updateDB db
+  wrapper "[UpdateDB]"      $ updateDB (name, (root, c))
   wrapper "[MakeWrapper]"   $ postoperation c
   where wrapper = wrapIOError . (++) "[Manager][Create][writeChallenge]"
 

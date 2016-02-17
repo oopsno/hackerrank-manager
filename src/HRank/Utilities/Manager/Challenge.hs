@@ -28,7 +28,7 @@ data Challenge = Challenge { name         :: String
                            , track        :: [String]
                            , description  :: Maybe String
                            , sampleInput  :: Maybe String
-                           , sampleOutput :: Maybe String } deriving (Eq, Show)
+                           , sampleOutput :: Maybe String } deriving (Eq, Show, Read)
 
 data ModuleType = Solution | UnitTest deriving (Enum, Eq, Show)
 
@@ -104,10 +104,16 @@ moduleImpl t c = unwords [ "import", "qualified", moduleName t c ]
 moduleImplQ :: ModuleType -> Challenge -> String -> String
 moduleImplQ t c alias = unwords [ moduleImpl t c, "as", alias ]
 
-renderDescription :: Challenge -> String
-renderDescription c = case readHtml def . fromMaybe "" . description $ c of
-  Right doc -> writeHaddock def doc
+reformateDescription :: (WriterOptions -> Pandoc -> String) -> Challenge -> String
+reformateDescription writter c = case readHtml def . fromMaybe "" . description $ c of
+  Right doc -> writter def doc
   Left  err -> "-- No printable description"
+
+renderDescription :: Challenge -> String
+renderDescription = reformateDescription writeHaddock
+
+asciiDescription :: Challenge -> String
+asciiDescription = reformateDescription writeAsciiDoc
 
 solutionRender :: Challenge -> String
 solutionRender c = unlines 

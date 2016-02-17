@@ -12,22 +12,23 @@ import qualified Text.Fuzzy as F
 import Text.Show.Pretty ( ppShow )
 
 import HRank.Utilities.Manager.IOError
+import HRank.Utilities.Manager.Challenge
 
 absDBPath :: IO FilePath
 absDBPath = (</> ".hrmng/db.hs") <$> getHomeDirectory 
 
-readDB :: IO [(String, FilePath)]
+readDB :: IO [(String, (FilePath, Challenge))]
 readDB = withDefault "[Manager][DB][readDB]"
                      []
                      (absDBPath >>= (SIO.readFile >=> return . read))
 
-writeDB :: [(String, FilePath)] -> IO ()
+writeDB :: [(String, (FilePath, Challenge))] -> IO ()
 writeDB xs = wrapIOError "[Manager][DB][writeDB]"
                          (absDBPath >>= withFileExsit write (mkdir >> write))
   where mkdir = createDirectory . takeDirectory
         write = flip writeFile (ppShow xs)
 
-lookupDB :: String -> IO [(String, FilePath)]
+lookupDB :: String -> IO [(String, (FilePath, Challenge))]
 lookupDB slug = fuzzyLookup slug <$!> readDB
   where fuzzyLookup p xs = map F.original $ F.filter p xs "<" ">" fst False
 
@@ -35,7 +36,7 @@ exsitsInDB :: String -> IO Bool
 exsitsInDB slug = wrapIOError "[Manager][DB][exsitsInDB]"
                               (isJust . lookup slug <$!> readDB)
 
-updateDB :: (String, FilePath) -> IO ()
+updateDB :: (String, (FilePath, Challenge)) -> IO ()
 updateDB pair = wrapIOError "[Manager][DB][updateDB]"
                             ((pair:) <$!> readDB >>= writeDB) 
 
@@ -43,7 +44,7 @@ nameToPath :: String -> IO FilePath
 nameToPath slug = withDirExsit return (lookupDB >=> (\xs ->
   case length xs of
     0 -> ioError nrErr
-    1 -> return . snd . head $ xs
+    1 -> return . fst . snd . head $ xs
     _ -> mulErr xs >>= ioError)) slug
   where nrErr = userError $
           "[Manager][DB][nameOrPath]: Cannot resolve \"" ++ slug ++ "\""
@@ -52,10 +53,11 @@ nameToPath slug = withDirExsit return (lookupDB >=> (\xs ->
           return . userError $
             unlines (("[Manager][DB][nameOrPath]: Multiple matches of \"" ++
                         slug ++ "\" found:"):matches)
-        fmt (s, p) = do
+        fmt (s, (p, c)) = do
           rel <- makeRelativeToCurrentDirectory p
           return $ unlines ["\tName: " ++ s, "\tPath: " ++ rel]
 
-listChallenges :: IO [(String, FilePath)] 
-listChallenges = readDB >>= mapM
-  (\(n, p) -> liftM ((,) n) (makeRelativeToCurrentDirectory p))
+listChallenges :: IO [(String, (FilePath, Challenge))] 
+listChallenges = readDB >>= mapM (\(n, (p, c)) -> do
+  rel <- makeRelativeToCurrentDirectory p
+  return (n, (rel, c)))
