@@ -32,13 +32,14 @@ instance Show Function where
   show x = unwords [ "Function", name x, "as", alias x]
 
 formatDoc :: Function -> String
-formatDoc f = unlines $ unwords [" ", alias f, "-", name f]:map ("    " ++) (description f)
+formatDoc f = unlines $
+  unwords [" ", alias f, "-", name f]:map ("    " ++) (description f)
 
 withPath :: Action -> Action
-withPath act = act <=< nameOrPath
+withPath = (nameToPath >=>)
 
 withSolution :: Action -> Action
-withSolution act = act . (</> "Solution.hs") <=< nameOrPath
+withSolution = withPath . (. (</> "Solution.hs"))
 
 create :: Function
 create = Function

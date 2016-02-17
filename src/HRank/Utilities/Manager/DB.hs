@@ -34,8 +34,8 @@ exsitsInDB slug = wrapIOError "[Manager][DB][exsitsInDB]" (isJust . lookup slug 
 updateDB :: (String, FilePath) -> IO ()
 updateDB pair = wrapIOError "[Manager][DB][updateDB]" ((pair:) <$!> readDB >>= writeDB) 
 
-nameOrPath :: String -> IO FilePath
-nameOrPath slug = withDirExsit return (lookupDB >=> (\xs ->
+nameToPath :: String -> IO FilePath
+nameToPath slug = withDirExsit return (lookupDB >=> (\xs ->
   case length xs of
     0 -> ioError nrErr
     1 -> return . snd . head $ xs
@@ -47,4 +47,5 @@ nameOrPath slug = withDirExsit return (lookupDB >=> (\xs ->
         fmt (s, p) = do
           rel <- makeRelativeToCurrentDirectory p
           return $ unlines ["\tName: " ++ s, "\tPath: " ++ rel]
+
 
