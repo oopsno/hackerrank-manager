@@ -188,7 +188,7 @@ renderChallenge c = ((slug c, rootDir c), map (`render` c) [Solution ..])
 makeCategory :: String -> [String] -> FilePath -> IO ()
 makeCategory name imports path = do
   putStrLn $ "makeCategory: " ++ path
-  creakeDirectoryIfMissing True (takeDirectory path)
+  createDirectoryIfMissing True (takeDirectory path)
   withFileExsit
     (\path -> (renderCategory name . nub . (++) imports) <$!> getImports path
                 >>= writeFile path)
