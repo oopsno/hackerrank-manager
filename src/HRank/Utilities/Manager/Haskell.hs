@@ -1,10 +1,12 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module HRank.Utilities.Manager.Haskell where
 
 import Control.Exception
 import Control.Monad
+import Control.Lens hiding (element)
 import Data.List
-import Language.Haskell.Exts.Parser
-import Language.Haskell.Exts.Syntax
+import Language.Haskell.Exts
 import System.Directory
 import System.FilePath.Posix
 import System.Exit
@@ -15,9 +17,29 @@ import System.Process
 
 import HRank.Utilities.Manager.IOError
 
-pushInMain :: String -> String
-pushInMain = unlines . ("module Main where":) . tail . lines
+data Module' = Module' { _mSrcLoc  :: SrcLoc
+                       , _mName    :: ModuleName
+                       , _mPragmas :: [ModulePragma]
+                       , _mWarning :: Maybe WarningText
+                       , _mExport  :: Maybe [ExportSpec]
+                       , _mImport  :: [ImportDecl]
+                       , _mDecl    :: [Decl] } deriving (Eq, Show)
 
+-- Lenses
+makeLenses ''Module'
+
+fromModule :: Module -> Module'
+fromModule (Module s n p w e i d) = Module' s n p w e i d
+
+toModule :: Module' -> Module
+toModule (Module' s n p w e i d) = Module s n p w e i d
+
+pushInMain :: String -> String
+pushInMain code = case parseModule code of
+  (ParseOk m) -> prettyPrint . toModule . set mName mMain . fromModule $ m
+  (ParseFailed loc err) -> throw . userError $ unwords
+      [show err, " at:", show (srcLine loc), ":", show (srcColumn loc)]
+  where mMain = ModuleName "Main"
 compile :: FilePath -> IO ()
 compile src = do
   tmpdir <- mkdtemp "GHCTemp"

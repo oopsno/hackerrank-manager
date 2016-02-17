@@ -97,7 +97,7 @@ read = Function
   { name        = "read"
   , alias       = "r"
   , description = [ "Print a challenge's source code." ]
-  , action      = withSolution (readFile >=> putStrLn) }
+  , action      = withSolution R.printSource }
 
 copyToPaste :: Function
 copyToPaste = Function
