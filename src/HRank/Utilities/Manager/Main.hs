@@ -41,22 +41,35 @@ withPath = (DB.nameToPath >=>)
 withSolution :: Action -> Action
 withSolution = withPath . (. (</> "Solution.hs"))
 
+printChallenge :: FilePath -> D.Challenge -> IO ()
+printChallenge p c = do
+    putStrLn $ "  Challenge:   " ++ D.name c
+    putStrLn $ "  Slug:        " ++ D.slug c
+    putStrLn $ "  Location:    " ++ p
+    putStrLn $ "  Origin:      " ++ originURL (D.slug c)
+    putStrLn $ description c
+  where
+    pre = "  Description: "
+    indent = (++) $ replicate (length pre) ' '
+    description c = case lines $ D.asciiDescription c of
+      (x:xs) -> unlines $ (pre ++ x) : map indent xs
+      []     -> pre ++ "Unavailable"
+    originURL = ("https://www.hackerrank.com/challenges/"++)
+
 listChallenges :: Function
 listChallenges = Function
   { name        = "list"
   , alias       = "l"
   , description = [ "List all registered challenges" ]
-  , action      = const $ DB.listChallenges >>= (\xs ->
-                    forM_ xs (\(n, (p, c)) -> do
-                      putStrLn $ "  Challenge:   " ++ D.name c
-                      putStrLn $ "  Slug:        " ++ D.slug c
-                      putStrLn $ "  Location:    " ++ p
-                      putStrLn $ description c)) }
-  where pre = "  Description: "
-        indent = (++) $ replicate (length pre) ' '
-        description c = case lines $ D.asciiDescription c of
-          (x:xs) -> unlines $ (pre ++ x) : map indent xs
-          []     -> pre ++ "Unavailable"
+  , action      = \pattern -> 
+    (if null pattern then DB.listChallenges else DB.lookupDB pattern)
+      >>= \xs -> do
+        let xss = length xs
+        putStrLn $ unwords
+          [ "Listing", show xss, "Challenge"++(if xss == 1 then "" else "s") ]
+        when (xss > 0) (foldl1 psp . map p $ xs) }
+  where p = uncurry printChallenge  . snd
+        psp a b = a >> putStrLn "" >> b
 
 create :: Function
 create = Function
