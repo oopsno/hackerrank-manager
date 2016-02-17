@@ -2,15 +2,26 @@ module HRank.Utilities.Manager.Challenge where
 
 import Control.Applicative
 import Control.Exception
+import Control.Lens ((^.), (^?))
 import Control.Monad
+import Data.Aeson.Lens
+import qualified Data.Aeson.Types as AT
+import Data.ByteString.Lazy ( ByteString )
 import Data.Char
 import Data.Maybe
 import Data.List
 import Data.List.Split
+import Data.Text ( pack, unpack ) 
+import qualified Data.Text as TX
 import System.FilePath.Posix
+import System.Directory
+import Text.HandsomeSoup
 import Text.Pandoc
+import Text.Regex.PCRE
+import Text.XML.HXT.Core
 
 import HRank.Utilities.Manager.Haskell
+import HRank.Utilities.Manager.IOError
 
 data Challenge = Challenge { name         :: String
                            , slug         :: String
@@ -20,6 +31,39 @@ data Challenge = Challenge { name         :: String
                            , sampleOutput :: Maybe String } deriving (Eq, Show)
 
 data ModuleType = Solution | UnitTest deriving (Enum, Eq, Show)
+
+parseChallenge :: ByteString -> IO Challenge
+parseChallenge content = do
+    let html = fetchField content "body_html"
+        slug = fetchField content "slug"
+        name = fetchField content "name"
+        track = [ fetchField2 content ["track", "track_slug"], fetchField2 content ["track", "slug"] ]
+    let doc = parseHtml html
+    quizzes <- runX (doc >>> css "p" //> hasText (not . null) >>> getText)
+    let sim = html =~ siRE :: [[String]]
+        som = html =~ soRE :: [[String]]
+        quiz = maybeField quizzes head
+        si   = maybeField sim     (last . head) 
+        so   = maybeField som     (last . head)
+    return $ Challenge name slug track quiz si so
+  where
+    buildRE t = concat ["<strong>Sample ", t, "</strong></p>\\s+<pre><code>([^<]*)</code>"]
+    siRE = buildRE "Input"
+    soRE = buildRE "Output"
+    maybeField s op = if null s then Nothing else Just $ op s
+
+fetchField :: ByteString -> String -> String
+fetchField content x =
+  case content ^? key (pack "model") . key (pack x) of
+    Just (AT.String field) -> unpack field
+    _ -> throw $ PatternMatchFail $ "Cannot fetch field \"model." ++ x ++  "\""
+
+fetchField2 :: ByteString -> [String] -> String
+fetchField2 content xs@[x, y] =
+  case content ^? key (pack "model") . key (pack x) . key (pack y) of
+    Just (AT.String field) -> unpack field
+    _ -> throw $ PatternMatchFail $ "Cannot fetch field \"model." ++ intercalate "." xs ++  "\""
+
 
 titlizeSlug :: String -> String
 titlizeSlug = concatMap (\(x:xs) -> toUpper x:xs) . splitOn "-" 
@@ -138,20 +182,31 @@ codeRender Solution = solutionRender
 render :: ModuleType -> Challenge -> (FilePath, String)
 render = curry $ (,) <$> uncurry modulePath <*> uncurry codeRender
 
+renderChallenge :: Challenge -> ((String, FilePath), [(FilePath, String)])
+renderChallenge c = ((slug c, rootDir c), map (`render` c) [Solution ..])
+
+makeCategory :: String -> [String] -> FilePath -> IO ()
+makeCategory name imports path = do
+  putStrLn $ "makeCategory: " ++ path
+  creakeDirectoryIfMissing True (takeDirectory path)
+  withFileExsit
+    (\path -> (renderCategory name . nub . (++) imports) <$!> getImports path
+                >>= writeFile path)
+    (\path -> writeFile path $ renderCategory name imports)
+    path
+
 preoperation :: Challenge -> IO ()
 preoperation c = do
   let xs = "HRank" : titlizeTrack c ++ [titlizeChallenge c]
-  forM_ [1..length xs -1] $ \n -> do
+  forM_ [1..length xs - 1] $ \n -> do
     let categoryCrumb = take n xs
         moduleCrumb   = take (n + 1) xs
         categoryName  = foldl1 (<.>) categoryCrumb
         categoryPath  = "src" </> foldl1 (</>) categoryCrumb <.> "hs"
         importModule  = foldl1 (<.>) moduleCrumb
+    print [ categoryName, categoryPath ]
     makeCategory categoryName [importModule] categoryPath
 
 postoperation :: Challenge -> IO ()
 postoperation c = writeFile (wrapperPath c) (wrapperRender c)
        
-renderChallenge :: Challenge -> ((String, FilePath), [(FilePath, String)])
-renderChallenge c = ((slug c, rootDir c), map (`render` c) [Solution ..])
-

@@ -86,8 +86,3 @@ getImports path = withDefault "[Manager][DB][getImports]" [] (do
     (ParseFailed loc err) -> ioError . userError $ unwords
       [show err, " at: ", path, ":", show (srcLine loc), ":", show (srcColumn loc)])
 
-makeCategory :: String -> [String] -> FilePath -> IO ()
-makeCategory name imports =
-  withFileExsit
-    (\path -> (renderCategory name . nub . (++) imports) <$!> getImports path >>= writeFile path)
-    (\path -> writeFile path $ renderCategory name imports)
