@@ -17,10 +17,13 @@ absDBPath :: IO FilePath
 absDBPath = (</> ".hrmng/db.hs") <$> getHomeDirectory 
 
 readDB :: IO [(String, FilePath)]
-readDB = withDefault "[Manager][DB][readDB]" [] (absDBPath >>= (SIO.readFile >=> return . read))
+readDB = withDefault "[Manager][DB][readDB]"
+                     []
+                     (absDBPath >>= (SIO.readFile >=> return . read))
 
 writeDB :: [(String, FilePath)] -> IO ()
-writeDB xs = wrapIOError "[Manager][DB][writeDB]" (absDBPath >>= withFileExsit write (mkdir >> write))
+writeDB xs = wrapIOError "[Manager][DB][writeDB]"
+                         (absDBPath >>= withFileExsit write (mkdir >> write))
   where mkdir = createDirectory . takeDirectory
         write = flip writeFile (ppShow xs)
 
@@ -29,10 +32,12 @@ lookupDB slug = fuzzyLookup slug <$!> readDB
   where fuzzyLookup p xs = map F.original $ F.filter p xs "<" ">" fst False
 
 exsitsInDB :: String -> IO Bool
-exsitsInDB slug = wrapIOError "[Manager][DB][exsitsInDB]" (isJust . lookup slug <$!> readDB)
+exsitsInDB slug = wrapIOError "[Manager][DB][exsitsInDB]"
+                              (isJust . lookup slug <$!> readDB)
 
 updateDB :: (String, FilePath) -> IO ()
-updateDB pair = wrapIOError "[Manager][DB][updateDB]" ((pair:) <$!> readDB >>= writeDB) 
+updateDB pair = wrapIOError "[Manager][DB][updateDB]"
+                            ((pair:) <$!> readDB >>= writeDB) 
 
 nameToPath :: String -> IO FilePath
 nameToPath slug = withDirExsit return (lookupDB >=> (\xs ->
@@ -40,12 +45,17 @@ nameToPath slug = withDirExsit return (lookupDB >=> (\xs ->
     0 -> ioError nrErr
     1 -> return . snd . head $ xs
     _ -> mulErr xs >>= ioError)) slug
-  where nrErr = userError $ "[Manager][DB][nameOrPath]: Cannot resolve \"" ++ slug ++ "\""
+  where nrErr = userError $
+          "[Manager][DB][nameOrPath]: Cannot resolve \"" ++ slug ++ "\""
         mulErr xs = do
           matches <- mapM fmt xs
-          return . userError $ unlines (("[Manager][DB][nameOrPath]: Multiple matches of \"" ++ slug ++ "\" found:"):matches)
+          return . userError $
+            unlines (("[Manager][DB][nameOrPath]: Multiple matches of \"" ++
+                        slug ++ "\" found:"):matches)
         fmt (s, p) = do
           rel <- makeRelativeToCurrentDirectory p
           return $ unlines ["\tName: " ++ s, "\tPath: " ++ rel]
 
-
+listChallenges :: IO [(String, FilePath)] 
+listChallenges = readDB >>= mapM
+  (\(n, p) -> liftM ((,) n) (makeRelativeToCurrentDirectory p))

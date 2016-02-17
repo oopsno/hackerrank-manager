@@ -13,13 +13,13 @@ import System.IO.Error
 
 import qualified System.IO.Error.Lens as IOELens
 
-import HRank.Utilities.Manager.DB      
 
 import qualified HRank.Utilities.Manager.Create  as C
 import qualified HRank.Utilities.Manager.Read    as R
 import qualified HRank.Utilities.Manager.Test    as T
 import qualified HRank.Utilities.Manager.Execute as X
 import qualified HRank.Utilities.Manager.Edit    as E
+import qualified HRank.Utilities.Manager.DB      as DB
 
 type Action = String -> IO ()
 
@@ -36,10 +36,20 @@ formatDoc f = unlines $
   unwords [" ", alias f, "-", name f]:map ("    " ++) (description f)
 
 withPath :: Action -> Action
-withPath = (nameToPath >=>)
+withPath = (DB.nameToPath >=>)
 
 withSolution :: Action -> Action
 withSolution = withPath . (. (</> "Solution.hs"))
+
+listChallenges :: Function
+listChallenges = Function
+  { name        = "list"
+  , alias       = "l"
+  , description = [ "List all registered challenges" ]
+  , action      = const $ DB.listChallenges >>= (\xs ->
+                    forM_ xs (\(n, p) -> do
+                      putStrLn $ "  Challenge: " ++ n
+                      putStrLn $ "  Location:  " ++ p)) }
 
 create :: Function
 create = Function
@@ -91,7 +101,8 @@ test = Function
   , action      = withSolution T.runUTest }
 
 functions :: [Function]
-functions = [ create
+functions = [ listChallenges
+            , create
             , edit
             , editUnitTest
             , Main.read
@@ -127,6 +138,7 @@ parseArgs [ops, target] =
   in if all isJust searchResult
        then (catMaybes searchResult, target)
        else ([unknownOperation ops, usage], target)
+parseArgs ["l"] = ([listChallenges], "")
 parseArgs [targets] = ([usage], targets)
 parseArgs _ = ([usage], "")
 
