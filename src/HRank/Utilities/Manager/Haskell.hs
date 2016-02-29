@@ -97,6 +97,7 @@ renderCategory name imports = unlines $
   , "Just imports all submodules."
   , "-}"
   , ""
+  , unwords [ "module", name, "where" ]
   , ""
   ] ++ map makeImport imports
 

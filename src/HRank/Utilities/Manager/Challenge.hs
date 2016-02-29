@@ -28,7 +28,8 @@ data Challenge = Challenge { name         :: String
                            , track        :: [String]
                            , description  :: Maybe String
                            , sampleInput  :: Maybe String
-                           , sampleOutput :: Maybe String } deriving (Eq, Show, Read)
+                           , sampleOutput :: Maybe String
+                           , bodyHtml     :: String } deriving (Eq, Show, Read)
 
 data ModuleType = Solution | UnitTest deriving (Enum, Eq, Show)
 
@@ -45,7 +46,7 @@ parseChallenge content = do
         quiz = maybeField quizzes head
         si   = maybeField sim     (last . head) 
         so   = maybeField som     (last . head)
-    return $ Challenge name slug track quiz si so
+    return $ Challenge name slug track quiz si so html
   where
     buildRE t = concat ["<strong>Sample ", t, "</strong></p>\\s+<pre><code>([^<]*)</code>"]
     siRE = buildRE "Input"
@@ -87,10 +88,10 @@ wrapperPath :: Challenge -> FilePath
 wrapperPath c = rootDir c <.> "hs"
 
 wrapperName :: Challenge -> String
-wrapperName c = intercalate "." $ "HRank" : titlizeTrack c
+wrapperName c = "HRank" <.> intercalate "." (titlizeTrack c) <.>titlizeChallenge c
 
 moduleName :: ModuleType -> Challenge -> String
-moduleName t c = wrapperName c <.> titlizeChallenge c
+moduleName t c = wrapperName c <.> show t
 
 wrapperDecl :: Challenge -> String
 wrapperDecl c = unwords [ "module", wrapperName c, "where" ]
@@ -105,7 +106,7 @@ moduleImplQ :: ModuleType -> Challenge -> String -> String
 moduleImplQ t c alias = unwords [ moduleImpl t c, "as", alias ]
 
 reformateDescription :: (WriterOptions -> Pandoc -> String) -> Challenge -> String
-reformateDescription writter c = case readHtml def . fromMaybe "" . description $ c of
+reformateDescription writter c = case readHtml def . bodyHtml $ c of
   Right doc -> writter def doc
   Left  err -> "-- No printable description"
 
@@ -170,7 +171,7 @@ wrapperRender c = unlines
   , "Stability   : experimental"
   , "Portability : POSIX"
   , ""
-  , "Just inports Solution and its UnitTest"
+  , "Just imports Solution and its UnitTest"
   , "-}"
   , ""
   , wrapperDecl c
