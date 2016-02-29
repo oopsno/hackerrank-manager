@@ -65,9 +65,13 @@ fetchField2 content xs@[x, y] =
     Just (AT.String field) -> unpack field
     _ -> throw $ PatternMatchFail $ "Cannot fetch field \"model." ++ intercalate "." xs ++  "\""
 
+titlize :: String -> String
+titlize "fp"   = "FP"
+titlize "sql"  = "SQL"
+titlize (x:xs) = toUpper x : xs
 
 titlizeSlug :: String -> String
-titlizeSlug = concatMap (\(x:xs) -> toUpper x:xs) . splitOn "-" 
+titlizeSlug = concatMap titlize . splitOn "-" 
 
 titlizeChallenge :: Challenge -> String
 titlizeChallenge = titlizeSlug . slug
