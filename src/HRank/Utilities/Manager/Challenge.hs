@@ -118,7 +118,7 @@ asciiDescription = reformateDescription writeAsciiDoc
 solutionRender :: Challenge -> String
 solutionRender c = unlines 
   [ "{-| "
-  , "Module: " ++ moduleName Solution c
+  , "Module      : " ++ moduleName Solution c
   , "Description : Solution for Challenge [" ++ breadcrumb c ++ "]"
   , "License     : CC BY-NC-SA 3.0"
   , "Stability   : experimental"
@@ -138,7 +138,7 @@ solutionRender c = unlines
 unittestRender :: Challenge -> String
 unittestRender c = unlines
   [ "{-| "
-  , "Module: " ++ moduleName UnitTest c
+  , "Module      : " ++ moduleName UnitTest c
   , "Description : UnitTest for Challenge [" ++ breadcrumb c ++ "]"
   , "License     : CC BY-NC-SA 3.0"
   , "Stability   : experimental"
@@ -164,7 +164,7 @@ unittestRender c = unlines
 wrapperRender :: Challenge -> String
 wrapperRender c = unlines 
   [ "{-|"
-  , "Module: " ++ wrapperName c 
+  , "Module      : " ++ wrapperName c 
   , "Description : Wrapper for Challenge [" ++ breadcrumb c ++ "]"
   , "License     : CC BY-NC-SA 3.0"
   , "Stability   : experimental"

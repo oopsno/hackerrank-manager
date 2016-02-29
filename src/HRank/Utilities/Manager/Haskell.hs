@@ -88,7 +88,7 @@ makeImportQ m alias = unwords [makeImport m, "as", alias]
 renderCategory :: String -> [String] -> String
 renderCategory name imports = unlines $
   [ "{-|"
-  , "Module: " ++ name
+  , "Module      : " ++ name
   , "Description : Wrapper for submodules in " ++ name 
   , "License     : CC BY-NC-SA 3.0"
   , "Stability   : experimental"
