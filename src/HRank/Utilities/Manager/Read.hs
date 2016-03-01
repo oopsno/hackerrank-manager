@@ -4,7 +4,7 @@ import Control.Applicative
 import Control.Monad
 import System.Process
 
-import HRank.Utilities.Manager.Haskell
+import HRank.Utilities.Manager.Haskell ( pushInMain )
 
 copyStringToPasteboard :: String -> IO ()
 copyStringToPasteboard = void . readCreateProcessWithExitCode (shell "pbcopy") 
@@ -16,4 +16,4 @@ printSource :: FilePath -> IO ()
 printSource = rewriteSource >=> putStrLn
 
 rewriteSource :: FilePath -> IO String
-rewriteSource = return . pushInMain <=< readFile
+rewriteSource = pushInMain

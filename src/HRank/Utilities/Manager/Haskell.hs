@@ -1,12 +1,9 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module HRank.Utilities.Manager.Haskell where
 
 import Control.Exception
 import Control.Monad
-import Control.Lens hiding (element)
 import Data.List
-import Language.Haskell.Exts
+import Data.Maybe
 import System.Directory
 import System.FilePath.Posix
 import System.Exit
@@ -15,31 +12,34 @@ import qualified System.IO.Strict as SIO
 import System.Posix.Temp
 import System.Process
 
+import DynFlags
+import GHC
+import GHC.Paths ( libdir )
+import Outputable
+
 import HRank.Utilities.Manager.IOError
 
-data Module' = Module' { _mSrcLoc  :: SrcLoc
-                       , _mName    :: ModuleName
-                       , _mPragmas :: [ModulePragma]
-                       , _mWarning :: Maybe WarningText
-                       , _mExport  :: Maybe [ExportSpec]
-                       , _mImport  :: [ImportDecl]
-                       , _mDecl    :: [Decl] } deriving (Eq, Show)
+parseSource :: FilePath -> IO ParsedSource
+parseSource path = do
+  source <- readFile path
+  defaultErrorHandler defaultFatalMessager defaultFlushOut $
+    runGhc (Just libdir) $ do
+      dflags <- getSessionDynFlags
+      let Right (_, p) = parser source dflags path
+      return p
 
--- Lenses
-makeLenses ''Module'
+transformModule :: (ParsedSource -> ParsedSource) -> FilePath -> IO ParsedSource
+transformModule fn = parseSource >=> return . fn
 
-fromModule :: Module -> Module'
-fromModule (Module s n p w e i d) = Module' s n p w e i d
+renameModule :: String -> ParsedSource -> ParsedSource
+renameModule name = fmap (\hsm -> hsm { hsmodName = fmap (fmap (const $ mkModuleName name)) (hsmodName hsm) })
 
-toModule :: Module' -> Module
-toModule (Module' s n p w e i d) = Module s n p w e i d
+pushInMain :: FilePath -> IO String
+pushInMain = transformModule (renameModule "Main") >=> \res ->
+  runGhc (Just libdir) $ do
+    dflags <- getSessionDynFlags
+    return $ showSDocDump dflags $ ppr res
 
-pushInMain :: String -> String
-pushInMain code = case parseModule code of
-  (ParseOk m) -> prettyPrint . toModule . set mName mMain . fromModule $ m
-  (ParseFailed loc err) -> throw . userError $ unwords
-      [show err, " at:", show (srcLine loc), ":", show (srcColumn loc)]
-  where mMain = ModuleName "Main"
 compile :: FilePath -> IO ()
 compile src = do
   tmpdir <- mkdtemp "GHCTemp"
@@ -47,7 +47,6 @@ compile src = do
   putStrLn $ "[hrmng][Compile]: " ++ cmd
   catch (callCommand cmd)
         (\e -> hPutStrLn stderr $ "[hrmng][Errro]: Compile Failed: " ++ show (e :: IOException))
-
   removeDirectoryRecursive tmpdir
 
 executeOnTheFly :: String -> (FilePath -> IO()) -> IO ()
@@ -70,14 +69,8 @@ runhaskell src = executeOnTheFly src $ \p -> do
 
 detectModuleName :: FilePath -> IO String
 detectModuleName path = do
-  src <- readFile path
-  case parseModule src of
-    ParseOk m -> return $ moduleName m
-    ParseFailed loc err -> error $ "Parse error at " ++ formatLoc loc ++ ": " ++ err
-  where moduleName :: Module -> String 
-        moduleName (Module _ (ModuleName n) _ _ _ _ _) = n
-        formatLoc :: SrcLoc -> String
-        formatLoc s = show (srcLine s) ++ ":" ++ show (srcColumn s)
+  name <- hsmodName . unLoc <$> parseSource path
+  return $ maybe "Main" (moduleNameString . unLoc) name
 
 makeImport :: String -> String
 makeImport = ("import " ++)
@@ -102,10 +95,7 @@ renderCategory name imports = unlines $
   ] ++ map makeImport imports
 
 getImports :: FilePath -> IO [String]
-getImports path = withDefault "[Manager][DB][getImports]" [] (do
-  parseResult <- parseModule <$!> SIO.readFile path
-  case parseResult of 
-    (ParseOk (Module _ _ _ _ _ xs _)) -> return $ map ((\(ModuleName n) -> n) . importModule) xs
-    (ParseFailed loc err) -> ioError . userError $ unwords
-      [show err, " at: ", path, ":", show (srcLine loc), ":", show (srcColumn loc)])
-
+getImports path = withDefault "[Manager][DB][getImports]" [] $ do
+  imps <- hsmodImports . unLoc <$> parseSource path
+  return $ map (moduleNameString . unLoc . ideclName . unLoc) imps
+  

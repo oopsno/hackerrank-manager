@@ -22,6 +22,7 @@ library
 
 executable hrmng
   build-depends:       base >= 4.8 && < 4.9,
+                       ghc  >= 7.10, 
                        hxt  >= 9.3,
                        unix >= 2.7,
                        lens >= 4.13,
@@ -36,14 +37,15 @@ executable hrmng
                        process >= 1.2,
                        filepath >= 1.4,
                        directory >= 1.2,
+                       ghc-paths >= 0.1,
                        regex-pcre >= 0.94,
                        bytestring >= 0.10, 
                        lens-aeson >= 1.0.0.5,
                        pretty-show >= 1.6, 
                        HandsomeSoup >= 0.4, 
-                       haskell-src-exts >= 1.17
   main-is: HRank/Utilities/Manager/Main.hs
   hs-source-dirs:      src
   default-language:    Haskell2010
   ghc-options:
     -dynamic
+    -package ghc

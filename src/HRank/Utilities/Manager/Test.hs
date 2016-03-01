@@ -7,9 +7,9 @@ import HRank.Utilities.Manager.Haskell
 
 runUTest :: FilePath -> IO ()
 runUTest path = do
-  solutionSrc <- readFile path
+  solutionSrc <- pushInMain path
   moduleT <- detectModuleName $ replaceBaseName path "UnitTest"
-  executeOnTheFly (pushInMain solutionSrc) $ \p -> do
+  executeOnTheFly solutionSrc $ \p -> do
     let mainSrc = [ "module Main where"
                   , "import qualified " ++ moduleT ++ " as U"
                   , "import qualified Data.Text as T"
