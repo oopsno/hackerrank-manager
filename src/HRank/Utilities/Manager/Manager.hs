@@ -1,4 +1,4 @@
-module Main where
+module HRank.Utilities.Manager.Manager where
 
 import Control.Applicative
 import Control.Monad
@@ -6,6 +6,7 @@ import Control.Exception
 import Control.Lens
 import Data.Maybe
 import Data.Char
+import Prelude hiding ( read )
 import System.Environment
 import System.FilePath.Posix
 import System.IO
@@ -125,7 +126,7 @@ functions = [ listChallenges
             , create
             , edit
             , editUnitTest
-            , Main.read
+            , read
             , copyToPaste
             , execute
             , test ]
@@ -162,8 +163,8 @@ parseArgs ["l"] = ([listChallenges], "")
 parseArgs [targets] = ([usage], targets)
 parseArgs _ = ([usage], "")
 
-main :: IO ()
-main = do
+manager :: IO ()
+manager = do
   (argFuncs, argTarget) <- parseArgs <$> getArgs
   let totalSteps = length argFuncs
   forM_ (zip [1..] argFuncs) $ \(i, act) -> do

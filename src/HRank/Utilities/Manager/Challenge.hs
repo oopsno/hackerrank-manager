@@ -1,3 +1,11 @@
+{-|
+Module      : HRank.Utilities.Manager.Challenge
+Description : Fetch, parse and render Challenges
+License     : Unlicense
+Stability   : experimental
+Portability : POSIX
+|-}
+
 module HRank.Utilities.Manager.Challenge where
 
 import Control.Applicative
