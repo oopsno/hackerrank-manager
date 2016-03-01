@@ -111,7 +111,7 @@ execute = Function
   { name        = "execute"
   , alias       = "x"
   , description = [ "Execute a challenge's main :: IO () action." ]
-  , action      = withPath X.executeMain }
+  , action      = withSolution X.executeMain }
 
 test :: Function
 test = Function
