@@ -4,9 +4,14 @@ Description : Exposes Manager's main function.
 License     : Unlicense
 Stability   : experimental
 Portability : POSIX
-|-}
 
-module HRank.Utilities.Manager where
+Exposes Manager API
+
+-}
+
+module HRank.Utilities.Manager (
+  module HRank.Utilities.Manager.Manager
+)where
 
 import HRank.Utilities.Manager.Manager
 

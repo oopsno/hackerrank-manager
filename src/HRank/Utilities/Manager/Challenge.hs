@@ -39,6 +39,24 @@ data Challenge = Challenge { name         :: String
                            , sampleOutput :: Maybe String
                            , bodyHtml     :: String } deriving (Eq, Show, Read)
 
+-- | Print a Challenge's detailed information
+printChallenge :: FilePath     -- ^ Location of the Challenge
+               -> Challenge  -- ^ The 'Challenge''s information
+               -> IO ()
+printChallenge p c = do
+    putStrLn $ "  Challenge:   " ++ name c
+    putStrLn $ "  Slug:        " ++ slug c
+    putStrLn $ "  Location:    " ++ p
+    putStrLn $ "  Origin:      " ++ originURL (slug c)
+    putStrLn $ description c
+  where
+    pre = "  Description: "
+    indent = (++) $ replicate (length pre) ' '
+    description c = case lines $ asciiDescription c of
+      (x:xs) -> unlines $ (pre ++ x) : map indent xs
+      []     -> pre ++ "Unavailable"
+    originURL = ("https://www.hackerrank.com/challenges/"++)
+
 data ModuleType = Solution | UnitTest deriving (Enum, Eq, Show)
 
 parseChallenge :: ByteString -> IO Challenge

@@ -1,4 +1,49 @@
-module HRank.Utilities.Manager.Manager where
+{-|
+Module      : HRank.Utilities.Manager
+Description : Exposes Manager's main function.
+License     : Unlicense
+Stability   : experimental
+Portability : POSIX
+
+Entrance, helper functions, functionalities and router for the Manager.
+
+-}
+
+module HRank.Utilities.Manager.Manager (
+  -- * Modules
+  -- | The modules used here
+  module HRank.Utilities.Manager.Challenge,
+  module HRank.Utilities.Manager.Create,
+  module HRank.Utilities.Manager.Read,
+  module HRank.Utilities.Manager.Test,
+  module HRank.Utilities.Manager.Execute,
+  module HRank.Utilities.Manager.Edit,
+  module HRank.Utilities.Manager.DB,
+  -- * Types and Datatypes
+  Action,
+  Functionality,
+  -- * Formatting Functions
+  genUsage,
+  -- * Utilities
+  withPath,
+  withSolution,
+  -- * Functionalities
+  -- | All the functionalities' definitions.
+  create,
+  edit,
+  editUnitTest,
+  read,
+  copyToPaste,
+  execute,
+  test,
+  usage,
+  -- * Router
+  functionalities,
+  route,
+  -- * Main Function
+  parseArgs,
+  manager
+) where
 
 import Control.Applicative
 import Control.Monad
@@ -14,6 +59,16 @@ import System.IO.Error
 
 import qualified System.IO.Error.Lens as IOELens
 
+-- import for exposing
+import qualified HRank.Utilities.Manager.Challenge
+import qualified HRank.Utilities.Manager.Create
+import qualified HRank.Utilities.Manager.Read
+import qualified HRank.Utilities.Manager.Test
+import qualified HRank.Utilities.Manager.Execute
+import qualified HRank.Utilities.Manager.Edit
+import qualified HRank.Utilities.Manager.DB
+
+-- aliases modules
 import qualified HRank.Utilities.Manager.Challenge  as D
 import qualified HRank.Utilities.Manager.Create     as C
 import qualified HRank.Utilities.Manager.Read       as R
@@ -22,43 +77,43 @@ import qualified HRank.Utilities.Manager.Execute    as X
 import qualified HRank.Utilities.Manager.Edit       as E
 import qualified HRank.Utilities.Manager.DB         as DB
 
-type Action = String -> IO ()
+-- | The representation of a functionality's implementation of the Manager
+--   Take a slug-name of a Challenge (like @minimum-draws@), and do something
+--   affects the real world.
+type Action = String  -- ^ Slug-name of a Challange
+            -> IO ()  -- ^ The Action should take.
 
-data Function = Function { name        :: String
-                         , alias       :: String
-                         , description :: [String]
-                         , action      :: Action }
 
-instance Show Function where
-  show x = unwords [ "Function", name x, "as", alias x]
+-- | The representation of a functionality of the Manager
+data Functionality = Functionality {
+    name        :: String   -- ^ Fullname of the functionality
+  , alias       :: String   -- ^ A shortcut for CLI use
+  , description :: [String] -- ^ Detailed description
+  , action      :: Action   -- ^ 'Action' implements the functionality
+  }
 
-formatDoc :: Function -> String
-formatDoc f = unlines $
+-- | Deriving 'Show' for debugging
+instance Show Functionality where
+  show x = unwords [ "Functionality", name x, "as", alias x]
+
+-- | formats a 'Functionality' to generate help messages used in 'usage'
+genUsage :: Functionality -> String
+genUsage f = unlines $
   unwords [" ", alias f, "-", name f]:map ("    " ++) (description f)
 
-withPath :: Action -> Action
+-- | Wraps an 'Action' with slug-name got replaced by physical dictionary's path
+withPath :: Action -- ^ 'Action' takes slug-name as argument
+         -> Action -- ^ 'Action' takes path as argument
 withPath = (DB.nameToPath >=>)
 
-withSolution :: Action -> Action
+-- | Wraps an 'Action' with slug-name got replaced by path to it's @Solution.hs@
+withSolution :: Action -- ^ 'Action' takes slug-name as argument
+             -> Action -- ^ 'Action' takes path as argument
 withSolution = withPath . (. (</> "Solution.hs"))
 
-printChallenge :: FilePath -> D.Challenge -> IO ()
-printChallenge p c = do
-    putStrLn $ "  Challenge:   " ++ D.name c
-    putStrLn $ "  Slug:        " ++ D.slug c
-    putStrLn $ "  Location:    " ++ p
-    putStrLn $ "  Origin:      " ++ originURL (D.slug c)
-    putStrLn $ description c
-  where
-    pre = "  Description: "
-    indent = (++) $ replicate (length pre) ' '
-    description c = case lines $ D.asciiDescription c of
-      (x:xs) -> unlines $ (pre ++ x) : map indent xs
-      []     -> pre ++ "Unavailable"
-    originURL = ("https://www.hackerrank.com/challenges/"++)
-
-listChallenges :: Function
-listChallenges = Function
+-- | List all registered challenges
+listChallenges :: Functionality
+listChallenges = Functionality
   { name        = "list"
   , alias       = "l"
   , description = [ "List all registered challenges" ]
@@ -69,80 +124,94 @@ listChallenges = Function
         putStrLn $ unwords
           [ "Listing", show xss, "Challenge"++(if xss == 1 then "" else "s") ]
         when (xss > 0) (foldl1 psp . map p $ xs) }
-  where p = uncurry printChallenge  . snd
+  where p = uncurry D.printChallenge  . snd
         psp a b = a >> putStrLn "" >> b
 
-create :: Function
-create = Function
+-- | Create a challenge
+create :: Functionality
+create = Functionality
   { name        = "create"
   , alias       = "c"
   , description = [ "Create a challenge" ]
   , action      = C.createQuiz }
 
-edit :: Function
-edit = Function
+-- | Edit a challenge's source code
+edit :: Functionality
+edit = Functionality
   { name        = "edit"
   , alias       = "e"
   , description = [ "Edit a challenge's source code." ]
   , action      = withSolution E.editSource }
 
-editUnitTest :: Function
-editUnitTest = Function
+-- | Edit a challenge's unittest code
+editUnitTest :: Functionality
+editUnitTest = Functionality
   { name        = "editut"
   , alias       = "u"
   , description = [ "Edit a challenge's unittest code." ]
   , action      = withPath E.editUnitTest }
 
-read :: Function
-read = Function
+-- | Print a challenge's source code
+read :: Functionality
+read = Functionality
   { name        = "read"
   , alias       = "r"
   , description = [ "Print a challenge's source code." ]
   , action      = withSolution R.printSource }
 
-copyToPaste :: Function
-copyToPaste = Function
+-- | Copy a challenge's source code to pasteboard
+copyToPaste :: Functionality
+copyToPaste = Functionality
   { name        = "copy"
   , alias       = "R"
   , description = [ "Copy a challenge's source code to pasteboard." ]
   , action      = withSolution R.copySource }
 
-execute :: Function
-execute = Function
+-- | Execute a challenge's main :: IO () action
+execute :: Functionality
+execute = Functionality
   { name        = "execute"
   , alias       = "x"
   , description = [ "Execute a challenge's main :: IO () action." ]
   , action      = withSolution X.executeMain }
 
-test :: Function
-test = Function
+-- | Execute a challenge's unittest
+test :: Functionality
+test = Functionality
   { name        = "test"
   , alias       = "t"
   , description = [ "Execute a challenge's unittest." ]
   , action      = withSolution T.runUTest }
 
-functions :: [Function]
-functions = [ listChallenges
+-- | All functionalities __but 'usage'__
+--   This list is used to generate 'route'
+functionalities :: [Functionality]
+functionalities = [ listChallenges
             , create
             , edit
             , editUnitTest
             , read
             , copyToPaste
             , execute
-            , test ]
+            , test
+            , usage ]
 
-usage :: Function
-usage = Function
+-- | Print usage of the Manager
+--   This one is not included in 'functionalities' to avoid infinite recursion
+usage :: Functionality
+usage = Functionality
   { name        = "usage"
-  , alias       = "u" 
-  , description = [ "Print usage" ]
+  , alias       = "h" 
+  , description = [ "Print this usage description" ]
   , action      = const $ mapM_ putStrLn $
                     [ "Usage: hrmng operations target"
                     , ""
-                    , "Operations:" ] ++ map formatDoc functions }
+                    , "Operations:" ] ++ map genUsage functionalities }
 
-unknownOperation :: String -> Function
-unknownOperation args = Function
+
+-- | Used to print error messages when argument-parsing failed
+unknownOperation :: String -> Functionality
+unknownOperation args = Functionality
   { name        = "UnknownOperation"
   , alias       = "-"
   , description = ["Used to print error messages"]
@@ -150,10 +219,14 @@ unknownOperation args = Function
       [ "Error: Cannot understand \"", args, "\": unknown operation:"
       , "->" ++ dropWhile (isJust . (`lookup` route) . return) args ] }
 
-route :: [(String, Function)]
-route = map ((,) <$> alias <*> id) functions
+-- | The functionality router, as an alias-Functionality lookup
+route :: [(String, Functionality)]
+route = map ((,) <$> alias <*> id) functionalities
 
-parseArgs :: [String] -> ([Function], String)
+-- | Parse given command-line arguments
+parseArgs :: [String]                  -- ^ Command-line arguments
+          -> ([Functionality], String) -- ^ parsed functionalities sequences and the
+                                       --   slug-name
 parseArgs [ops, target] = 
   let searchResult = map ((`lookup` route) . return) ops
   in if all isJust searchResult
@@ -163,6 +236,7 @@ parseArgs ["l"] = ([listChallenges], "")
 parseArgs [targets] = ([usage], targets)
 parseArgs _ = ([usage], "")
 
+-- | The real main function
 manager :: IO ()
 manager = do
   (argFuncs, argTarget) <- parseArgs <$> getArgs
