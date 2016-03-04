@@ -51,7 +51,7 @@ library
 
 executable manager
   build-depends:       base,
-                       hrank >= 0.2
+                       hackerrank-manager >= 0.2
   main-is: Manager.hs
   hs-source-dirs:      app
   default-language:    Haskell2010
