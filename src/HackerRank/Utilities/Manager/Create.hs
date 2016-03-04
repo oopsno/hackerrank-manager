@@ -1,4 +1,28 @@
-module HackerRank.Utilities.Manager.Create where
+{-|
+Module      : HackerRank.Utilities.Manager
+Description : Exposes Manager's main function.
+License     : Unlicense
+Stability   : experimental
+Portability : POSIX
+
+Implementation of __Create__ functionality.
+
+-}
+
+module HackerRank.Utilities.Manager.Create (
+  -- * Dependence
+  module HackerRank.Utilities.Manager.Challenge,
+  module HackerRank.Utilities.Manager.DB,
+  module HackerRank.Utilities.Manager.IOError,
+  -- * Network
+  buildURL,
+  getContent,
+  getChallenge,
+  -- * Maintaining local records
+  writeChallenge,
+  -- * Action
+  createChallenge
+) where
 
 import Control.Exception
 import Control.Lens ((^.))
@@ -18,12 +42,17 @@ import HackerRank.Utilities.Manager.Challenge
 import HackerRank.Utilities.Manager.DB
 import HackerRank.Utilities.Manager.IOError
 
+-- | Shortcut of @Wreq@'s Response type
 type ResponseT = Response ByteString
 
-buildURL :: String -> String
+-- | build URL of given Challenge from slug-name
+buildURL :: String -- ^ slug-name
+         -> String -- ^ RESTful API's URL
 buildURL = ("https://www.hackerrank.com/rest/contests/master/challenges" </>)
 
-getContent :: String -> IO ByteString
+-- | fetch raw response from HackerRank's RESTful API
+getContent :: String         -- ^ URL built by 'buildURL'
+           -> IO ByteString  -- ^ Raw response
 getContent url = do
   response <- get url
   let sc = response ^. responseStatus . statusCode
@@ -32,9 +61,13 @@ getContent url = do
      then return $ response ^. responseBody
      else ioError $ userError $ unwords ["Cannot access URL:", url, show sc, show sm]
 
-getChallenge :: String -> IO Challenge
+-- | Get 'Challenge' by slug-name via HackerRank's RESTful API
+--   Throws 'IOError' when operation fails.
+getChallenge :: String        -- ^ slug-name
+             -> IO Challenge  -- ^ parsed 'Challenge'
 getChallenge = parseChallenge <=< getContent . buildURL
 
+-- | Write a 'Challenge' to local record
 writeChallenge :: Challenge -> IO ()
 writeChallenge c = do
   let ((name, root), xs) = renderChallenge c
@@ -45,13 +78,16 @@ writeChallenge c = do
   wrapper "[MakeWrapper]"   $ postoperation c
   where wrapper = wrapIOError . (++) "[Manager][Create][writeChallenge]"
 
-createQuiz :: String -> IO ()
-createQuiz slug = do
+-- | create a Challenge from slug-name, get information via RESTful API and write to
+--   local records
+createChallenge :: String -- ^ slug-name
+           -> IO ()
+createChallenge slug = do
   exsits <- exsitsInDB slug
   if exsits
     then putStrLn $ slug ++ "already exists in LoaclDB"
     else do
-      putStrLn $ "[Manager][DB][createQuiz] Creating challenge: " ++ slug
+      putStrLn $ "[Manager][DB][createChallenge] Creating challenge: " ++ slug
       getChallenge slug >>= writeChallenge
-      putStrLn $ "[Manager][DB][createQuiz] Created challenge: " ++ slug
+      putStrLn $ "[Manager][DB][createChallenge] Created challenge: " ++ slug
 

@@ -133,7 +133,7 @@ create = Functionality
   { name        = "create"
   , alias       = "c"
   , description = [ "Create a challenge" ]
-  , action      = C.createQuiz }
+  , action      = C.createChallenge }
 
 -- | Edit a challenge's source code
 edit :: Functionality
