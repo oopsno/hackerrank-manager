@@ -1,12 +1,12 @@
 {-|
-Module      : HRank.Utilities.Manager.Challenge
+Module      : HackerRank.Utilities.Manager.Challenge
 Description : Fetch, parse and render Challenges
 License     : Unlicense
 Stability   : experimental
 Portability : POSIX
 |-}
 
-module HRank.Utilities.Manager.Challenge where
+module HackerRank.Utilities.Manager.Challenge where
 
 import Control.Applicative
 import Control.Exception
@@ -28,8 +28,8 @@ import Text.Pandoc
 import Text.Regex.PCRE
 import Text.XML.HXT.Core
 
-import HRank.Utilities.Manager.Haskell
-import HRank.Utilities.Manager.IOError
+import HackerRank.Utilities.Manager.Haskell
+import HackerRank.Utilities.Manager.IOError
 
 data Challenge = Challenge { name         :: String
                            , slug         :: String
@@ -109,7 +109,7 @@ breadcrumb :: Challenge -> String
 breadcrumb c = intercalate " / " $ titlizeTrack c ++ [name c]
 
 rootDir :: Challenge -> FilePath
-rootDir c = foldl1 (</>) ("src/HRank" : titlizeTrack c ++ [titlizeChallenge c])
+rootDir c = foldl1 (</>) ("src/HackerRank" : titlizeTrack c ++ [titlizeChallenge c])
 
 modulePath :: ModuleType -> Challenge -> FilePath
 modulePath t c = rootDir c </> show t <.> "hs"
@@ -118,7 +118,7 @@ wrapperPath :: Challenge -> FilePath
 wrapperPath c = rootDir c <.> "hs"
 
 wrapperName :: Challenge -> String
-wrapperName c = "HRank" <.> intercalate "." (titlizeTrack c) <.>titlizeChallenge c
+wrapperName c = "HackerRank" <.> intercalate "." (titlizeTrack c) <.>titlizeChallenge c
 
 moduleName :: ModuleType -> Challenge -> String
 moduleName t c = wrapperName c <.> show t
@@ -234,7 +234,7 @@ makeCategory name imports path = do
 
 preoperation :: Challenge -> IO ()
 preoperation c = do
-  let xs = "HRank" : titlizeTrack c ++ [titlizeChallenge c]
+  let xs = "HackerRank" : titlizeTrack c ++ [titlizeChallenge c]
   forM_ [1..length xs - 1] $ \n -> do
     let categoryCrumb = take n xs
         moduleCrumb   = take (n + 1) xs

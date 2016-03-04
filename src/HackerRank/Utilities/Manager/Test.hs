@@ -1,9 +1,9 @@
-module HRank.Utilities.Manager.Test where
+module HackerRank.Utilities.Manager.Test where
 
 import System.Directory
 import System.FilePath.Posix
 
-import HRank.Utilities.Manager.Haskell
+import HackerRank.Utilities.Manager.Haskell
 
 runUTest :: FilePath -> IO ()
 runUTest path = do

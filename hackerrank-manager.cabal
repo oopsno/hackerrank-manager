@@ -1,7 +1,7 @@
-name:                hrank
-version:             0.2.0.0
-synopsis:            HackerRank solutions in Haskell
-homepage:            https://github.com/oopsno/hrank
+name:                hackerrank-manager
+version:             0.2.1.0
+synopsis:            HackerRank solution manager in Haskell
+homepage:            https://github.com/oopsno/hackerrank-manager
 license-file:        LICENSE
 author:              Oopsno
 maintainer:          yufeiliu94@gmail.com
@@ -35,19 +35,19 @@ library
                        HandsomeSoup >= 0.4
   hs-source-dirs:      src
   default-language:    Haskell2010
-  exposed-modules:     HRank,
-                       HRank.Utilities,
-                       HRank.Utilities.Manager,
-                       HRank.Utilities.Manager.Challenge,
-                       HRank.Utilities.Manager.Create,
-                       HRank.Utilities.Manager.DB,
-                       HRank.Utilities.Manager.Edit,
-                       HRank.Utilities.Manager.Execute,
-                       HRank.Utilities.Manager.Haskell,
-                       HRank.Utilities.Manager.IOError,
-                       HRank.Utilities.Manager.Manager,
-                       HRank.Utilities.Manager.Read,
-                       HRank.Utilities.Manager.Test
+  exposed-modules:     HackerRank,
+                       HackerRank.Utilities,
+                       HackerRank.Utilities.Manager,
+                       HackerRank.Utilities.Manager.Challenge,
+                       HackerRank.Utilities.Manager.Create,
+                       HackerRank.Utilities.Manager.DB,
+                       HackerRank.Utilities.Manager.Edit,
+                       HackerRank.Utilities.Manager.Execute,
+                       HackerRank.Utilities.Manager.Haskell,
+                       HackerRank.Utilities.Manager.IOError,
+                       HackerRank.Utilities.Manager.Manager,
+                       HackerRank.Utilities.Manager.Read,
+                       HackerRank.Utilities.Manager.Test
 
 executable manager
   build-depends:       base,

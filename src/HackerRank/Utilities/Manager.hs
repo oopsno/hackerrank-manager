@@ -1,5 +1,5 @@
 {-|
-Module      : HRank.Utilities.Manager
+Module      : HackerRank.Utilities.Manager
 Description : Exposes Manager's main function.
 License     : Unlicense
 Stability   : experimental
@@ -9,10 +9,10 @@ Re-exposes Manager.Manager
 
 -}
 
-module HRank.Utilities.Manager (
+module HackerRank.Utilities.Manager (
   -- * Modules
-  module HRank.Utilities.Manager.Manager
+  module HackerRank.Utilities.Manager.Manager
 )where
 
-import HRank.Utilities.Manager.Manager
+import HackerRank.Utilities.Manager.Manager
 

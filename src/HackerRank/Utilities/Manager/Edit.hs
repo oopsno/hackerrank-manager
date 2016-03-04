@@ -1,11 +1,11 @@
-module HRank.Utilities.Manager.Edit where
+module HackerRank.Utilities.Manager.Edit where
 
 import Control.Exception
 import System.Environment
 import System.Process
 import System.FilePath.Posix
 
-import HRank.Utilities.Manager.IOError
+import HackerRank.Utilities.Manager.IOError
 
 getEditor :: IO String
 getEditor = catch (getEnv "EDITOR") ((\e -> return "vim") :: IOException -> IO String)

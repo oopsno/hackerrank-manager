@@ -1,5 +1,5 @@
 {-|
-Module      : HRank.Utilities.Manager
+Module      : HackerRank.Utilities.Manager
 Description : Exposes Manager's main function.
 License     : Unlicense
 Stability   : experimental
@@ -9,16 +9,16 @@ Entrance, helper functions, functionalities and router for the Manager.
 
 -}
 
-module HRank.Utilities.Manager.Manager (
+module HackerRank.Utilities.Manager.Manager (
   -- * Modules
   -- | The modules used here
-  module HRank.Utilities.Manager.Challenge,
-  module HRank.Utilities.Manager.Create,
-  module HRank.Utilities.Manager.Read,
-  module HRank.Utilities.Manager.Test,
-  module HRank.Utilities.Manager.Execute,
-  module HRank.Utilities.Manager.Edit,
-  module HRank.Utilities.Manager.DB,
+  module HackerRank.Utilities.Manager.Challenge,
+  module HackerRank.Utilities.Manager.Create,
+  module HackerRank.Utilities.Manager.Read,
+  module HackerRank.Utilities.Manager.Test,
+  module HackerRank.Utilities.Manager.Execute,
+  module HackerRank.Utilities.Manager.Edit,
+  module HackerRank.Utilities.Manager.DB,
   -- * Types and Datatypes
   Action,
   Functionality,
@@ -60,22 +60,22 @@ import System.IO.Error
 import qualified System.IO.Error.Lens as IOELens
 
 -- import for exposing
-import qualified HRank.Utilities.Manager.Challenge
-import qualified HRank.Utilities.Manager.Create
-import qualified HRank.Utilities.Manager.Read
-import qualified HRank.Utilities.Manager.Test
-import qualified HRank.Utilities.Manager.Execute
-import qualified HRank.Utilities.Manager.Edit
-import qualified HRank.Utilities.Manager.DB
+import qualified HackerRank.Utilities.Manager.Challenge
+import qualified HackerRank.Utilities.Manager.Create
+import qualified HackerRank.Utilities.Manager.Read
+import qualified HackerRank.Utilities.Manager.Test
+import qualified HackerRank.Utilities.Manager.Execute
+import qualified HackerRank.Utilities.Manager.Edit
+import qualified HackerRank.Utilities.Manager.DB
 
 -- aliases modules
-import qualified HRank.Utilities.Manager.Challenge  as D
-import qualified HRank.Utilities.Manager.Create     as C
-import qualified HRank.Utilities.Manager.Read       as R
-import qualified HRank.Utilities.Manager.Test       as T
-import qualified HRank.Utilities.Manager.Execute    as X
-import qualified HRank.Utilities.Manager.Edit       as E
-import qualified HRank.Utilities.Manager.DB         as DB
+import qualified HackerRank.Utilities.Manager.Challenge  as D
+import qualified HackerRank.Utilities.Manager.Create     as C
+import qualified HackerRank.Utilities.Manager.Read       as R
+import qualified HackerRank.Utilities.Manager.Test       as T
+import qualified HackerRank.Utilities.Manager.Execute    as X
+import qualified HackerRank.Utilities.Manager.Edit       as E
+import qualified HackerRank.Utilities.Manager.DB         as DB
 
 -- | The representation of a functionality's implementation of the Manager
 --   Take a slug-name of a Challenge (like @minimum-draws@), and do something

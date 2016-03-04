@@ -1,4 +1,4 @@
-module HRank.Utilities.Manager.Haskell where
+module HackerRank.Utilities.Manager.Haskell where
 
 import Control.Exception
 import Control.Monad
@@ -17,7 +17,7 @@ import GHC
 import GHC.Paths ( libdir )
 import Outputable
 
-import HRank.Utilities.Manager.IOError
+import HackerRank.Utilities.Manager.IOError
 
 parseSource :: FilePath -> IO ParsedSource
 parseSource path = do

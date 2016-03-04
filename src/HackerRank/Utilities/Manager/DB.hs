@@ -1,4 +1,4 @@
-module HRank.Utilities.Manager.DB where
+module HackerRank.Utilities.Manager.DB where
 
 import Control.Monad
 import Data.Either
@@ -11,8 +11,8 @@ import qualified System.IO.Strict as SIO
 import qualified Text.Fuzzy as F
 import Text.Show.Pretty ( ppShow )
 
-import HRank.Utilities.Manager.IOError
-import HRank.Utilities.Manager.Challenge
+import HackerRank.Utilities.Manager.IOError
+import HackerRank.Utilities.Manager.Challenge
 
 absDBPath :: IO FilePath
 absDBPath = (</> ".hrmng/db.hs") <$> getHomeDirectory 

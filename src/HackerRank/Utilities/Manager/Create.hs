@@ -1,4 +1,4 @@
-module HRank.Utilities.Manager.Create where
+module HackerRank.Utilities.Manager.Create where
 
 import Control.Exception
 import Control.Lens ((^.))
@@ -14,9 +14,9 @@ import Network.Wreq
 import System.FilePath.Posix
 import System.IO.Error
 
-import HRank.Utilities.Manager.Challenge
-import HRank.Utilities.Manager.DB
-import HRank.Utilities.Manager.IOError
+import HackerRank.Utilities.Manager.Challenge
+import HackerRank.Utilities.Manager.DB
+import HackerRank.Utilities.Manager.IOError
 
 type ResponseT = Response ByteString
 

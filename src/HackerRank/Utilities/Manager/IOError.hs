@@ -1,4 +1,4 @@
-module HRank.Utilities.Manager.IOError where
+module HackerRank.Utilities.Manager.IOError where
 
 import Control.Exception
 import System.Directory

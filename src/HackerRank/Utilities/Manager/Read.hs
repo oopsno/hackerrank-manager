@@ -1,10 +1,10 @@
-module HRank.Utilities.Manager.Read where
+module HackerRank.Utilities.Manager.Read where
 
 import Control.Applicative
 import Control.Monad
 import System.Process
 
-import HRank.Utilities.Manager.Haskell ( pushInMain )
+import HackerRank.Utilities.Manager.Haskell ( pushInMain )
 
 copyStringToPasteboard :: String -> IO ()
 copyStringToPasteboard = void . readCreateProcessWithExitCode (shell "pbcopy") 
