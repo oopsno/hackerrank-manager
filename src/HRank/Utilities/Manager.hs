@@ -5,11 +5,12 @@ License     : Unlicense
 Stability   : experimental
 Portability : POSIX
 
-Exposes Manager API
+Re-exposes Manager.Manager
 
 -}
 
 module HRank.Utilities.Manager (
+  -- * Modules
   module HRank.Utilities.Manager.Manager
 )where
 
